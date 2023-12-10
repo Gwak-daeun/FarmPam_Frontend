@@ -21,6 +21,8 @@ import ChargingView from "@/view/charging/ChargingView.vue";
 import AuctionPurchaseHistoryView from "@/view/mypage/AuctionPurchaseHistoryView.vue";
 import AuctionSaleHistoryView from "@/view/mypage/AuctionSaleHistoryView.vue";
 import AuctionView from "@/view/auction/AuctionView.vue";
+import Admin from "@/view/admin/AdminView.vue";
+import Chart from "@/view/admin/ChartView.vue";
 
 
 const routes = [
@@ -129,6 +131,14 @@ const routes = [
     name: "fail",
     component: FailView,
   },
+  {
+    path: "/admin",
+    component: Admin
+  },
+  {
+    path: "/chart",
+    component: Chart
+  }
 ];
 
 const router = createRouter({
