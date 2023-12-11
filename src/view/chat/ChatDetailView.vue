@@ -2,19 +2,15 @@
   <div>
     <logo />
     <Header>
-      <p>{{ username }}</p>
+      <p>{{ chatDetailInfo.toNickName }}</p>
     </Header>
     <div class="chat-header">
       <div class="item-img-div">
-        <img
-          class="item-img"
-          src="../../../public/assets/img/thumbnail1.png"
-          alt=""
-        />
+        <img class="item-img" :src="chatDetailInfo.itemThumbnailUrl" alt="" />
       </div>
       <div class="item-info">
-        <p class="item-title">{{ itemTitle }}</p>
-        <p class="item-price">{{ price.toLocaleString() }}원</p>
+        <p class="item-title">{{ chatDetailInfo.itemTitle }}</p>
+        <p class="item-price">{{ formattedBiddingPrice }}원</p>
       </div>
     </div>
     <Chat :chatId="chatId" />
@@ -30,15 +26,32 @@ export default {
   components: { Logo, Chat, Header },
   data() {
     return {
-      username: "그랜드팜",
-      itemTitle: "가희네 고당도 샤인머스켓 4kg",
-      price: 40000,
+      chatDetailInfo: {
+        toNickName: "테스트 닉네임",
+        itemTitle: "테스트 타이틀",
+        itemThumbnailUrl: "테스트 경매 사진",
+        biddingPrice: 40000,
+      },
     };
   },
   computed: {
     chatId() {
       return this.$route.params.id;
     },
+    formattedBiddingPrice() {
+      return this.chatDetailInfo.biddingPrice.toLocaleString();
+    },
+  },
+  created() {
+    this.myId = this.$store.state.user.id;
+    this.$store
+      .dispatch("findChatDetailInfo", {
+        chatId: this.chatId,
+        userId: this.myId,
+      })
+      .then(() => {
+        this.chatDetailInfo = this.$store.state.chatDetailInfo;
+      });
   },
 };
 </script>

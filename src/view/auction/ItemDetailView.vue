@@ -36,7 +36,7 @@
     <div class="item-footer">
       <div class="current-price">
         <span>현재 입찰가</span>
-        <span> {{ currentPrice.toLocaleString() }}원 </span>
+        <span> {{ currentPrice.content }}원 </span>
       </div>
       <div class="my-price">
         <span>내 입찰가</span>
@@ -52,13 +52,13 @@
         <div class="bid-btn">
           <div class="current-price-bid-box">
             <span>현재 입찰가</span>
-            <span> {{ currentPrice.toString() }}원 </span>
+            <span> {{currentPrice.content}}원 </span>
           </div>
           <div>
             <p class="bid-text">입찰할 금액(직접입력)</p>
           </div>
           <div>
-            <input v-model="userName" class="bid-input-box" type="text" placeholder="사용자 이름 입력.">
+<!--            <input v-model="userName" class="bid-input-box" type="text" placeholder="사용자 이름 입력.">-->
             <input v-model="bidPrice" class="bid-input-box" type="text" placeholder="입찰가 입력."><span
               class="bid-won">원</span>
           </div>
@@ -110,11 +110,11 @@ export default {
       nickName: "그랜드팜",
       review: 4.5,
       itemImg: require("../../../public/assets/img/apple.png"),
-      currentPrice: "",
+      currentPrice: [],
       myPrice: 9000,
       bidModal: true,
 
-      bidId:"chan",
+      bidId: "",
       publisher:"",
       userName:"",
       bidPrice:"",
@@ -138,18 +138,14 @@ export default {
   },
   inject: ["$http"],
   created() {
-
-    // const url = new URL(location.href);
-    // const roomId = url.searchParams.get('roomId');
-    //
-    // console.log('roomId: ', roomId);
     this.connect()
   },
   methods: {
     connect(){
       this.receiveBidList();
+
       //소켓 연결
-      const serverURL = "http://localhost:8080"
+      const serverURL = "http://localhost:8080/bid"
       let socket = new SocketJS(serverURL);
       this.stompClient = Stomp.over(socket);
       console.log(`connected try. URL: ${serverURL}`)
@@ -159,9 +155,10 @@ export default {
             this.connected = true;
             console.log('connected success', frame);
             this.stompClient.subscribe("/bidList", res =>{
-
               console.log("response message", res.body);
-              this.receiveList.push(JSON.parse(res.body));
+              this.receiveList = JSON.parse(res.body);
+              this.currentPrice = this.receiveList.at(-1);
+              // this.currentPrice = this.receiveList.content.pop();
               // this.currentPrice.pop();
             });
 
@@ -190,15 +187,38 @@ export default {
       });
 
     },
+
+    sendBidPrice(){
+      console.log("Send bidPrice:" + this.bidPrice);
+      if (this.stompClient && this.stompClient.connected) {
+        const msg = {
+          bidId: this.bidId,
+          content: this.bidPrice,
+        };
+        this.stompClient.send("/bid-push", JSON.stringify(msg), {});
+        console.log("receiveList : "+ this.receiveList);
+      }
+    },
     receiveBidList(){
       //입찰내역 호출
+      this.bidId = this.$route.params.id;
+      console.log(this.bidId);
       const msg = {
         bidId: this.bidId,
       };
+      console.log("send bidId:"+ this.bidId);
+      this.$http.post("/bid-list", JSON.stringify(msg), {
+        headers: {
 
-      this.$http.post("/bid-list", msg).then(res =>{
+        }
+      }).then(res =>{
+        console.log("receiveList : "+res.data);
         this.receiveList = (res.data);
-        console.log(this.receiveList);
+        console.log("!!!!!!!!!!receive last list" + this.receiveList.at(-1));
+        this.currentPrice = this.receiveList.at(-1);
+        // this.receiveList.push(this.currentPrice.pop());
+        console.log("this currentPrice: "+this.currentPrice);
+
 
       }).catch(err => {
         console.log(err);
@@ -217,17 +237,7 @@ export default {
       // }))
     },
 
-    sendBidPrice(){
-      console.log("Send bidPrice:" + this.bidPrice);
-      if (this.stompClient && this.stompClient.connected) {
-        const msg = {
-          bidId: this.bidId,
-          content: this.bidPrice,
-        };
-        this.stompClient.send("/bid-push", JSON.stringify(msg), {});
-        // this.stompClient.send("/bid-update", JSON.stringify(msg), {});
-      }
-    },
+
     // 경매 삭제
     deleteItem() {
       this.$http.delete(`/item/delete/${this.$route.params.id}`)

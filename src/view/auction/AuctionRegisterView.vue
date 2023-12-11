@@ -114,7 +114,7 @@ export default {
     return {
       itemTitle: "",
       minPrice: "",
-      time: "",
+      time: 0,
       itemDetail: "",
       tag: "",
       itemType: "",

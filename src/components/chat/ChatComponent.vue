@@ -1,21 +1,24 @@
 <template>
-  <div>
+  <div ref="displayRef">
     <row>
       <div class="chat-box" ref="chatBox">
-        <div
-          v-for="(message, index) in messages"
-          :key="index"
-          class="message"
-          ref="messageRef"
-          :style="{ height: calculateMessageHeight(message.message) + 'px' }"
-        >
-          <row>
-            <a
-              :class="[message.who]"
+        <row>
+          <div
+            v-for="(message, index) in messages"
+            :key="index"
+            class="message"
+            ref="messageRef"
+            :style="{ height: calculateMessageHeight(message.message) + 'px' }"
+          >
+            <p
+              :class="{
+                sender: isMyMessage(message.fromUserId),
+                receiver: !isMyMessage(message.fromUserId),
+              }"
               v-html="formatMessage(message.message)"
-            ></a>
-          </row>
-        </div>
+            ></p>
+          </div>
+        </row>
       </div>
       <div class="message-input-div" ref="inputDivRef">
         <textarea
@@ -62,54 +65,133 @@
   </div>
 </template>
 <script>
+import Stomp from "webstomp-client";
+import SockJS from "sockjs-client";
+
+let stompClient = null;
+
 export default {
   name: "ChatComponent",
   props: {
-    roomId: {
-      type: String,
+    chatId: {
+      type: Number,
       required: true,
     },
   },
   data() {
     return {
-      messages: [
-        { who: "me", message: "안녕하세요" },
-        { who: "you", message: "너무 귀여워요" },
-        { who: "me", message: "샤인머스켓 맛있겠다." },
-        { who: "me", message: "샤인머스켓 맛있겠다." },
-        { who: "you", message: "개맛도링" },
-      ],
+      messages: [],
       newMessage: "",
-      textareaHeight: "40px",
+      isSame: false,
+      myNickname: "",
+      isSocketConnected: false,
+      messageHeight: 0,
     };
   },
-  mounted() {
-    this.$refs.chatBox.scrollTop = this.$refs.chatBox.scrollHeight;
+  created() {
+    this.isSocketConnected = false;
+    this.myNickname = this.$store.state.user.nickname;
+    this.myId = this.$store.state.user.id;
+
+    this.getMessages();
+
+    // jwt 토큰이 없으면
+    // if(localStorage.getItem('accessToken') == null) {
+    //   router.replace("/home");
+    // }
+
+    if (this.isSocketConnected == false) {
+      this.connect();
+    }
   },
+  mounted() {
+    this.scrollToBottom();
+  },
+
+  watch: {
+    messages: {
+      deep: true,
+      handler() {
+        this.$nextTick(() => {
+          this.scrollToBottom();
+        });
+      },
+    },
+  },
+
   methods: {
+    isMyMessage(fromUserId) {
+      return this.myId === fromUserId;
+    },
     sendMessage() {
       if (this.newMessage.trim() !== "") {
-        this.messages.push({ who: "me", message: this.newMessage });
+        const currentTime = new Date();
+        const formattedTime = this.formatTime(currentTime);
+
+        const message = {
+          fromUserId: this.myId,
+          message: this.newMessage,
+          updatedAt: formattedTime,
+        };
+
+        this.$store.dispatch("sendMessage", {
+          message: message,
+          chatId: this.chatId,
+        });
+
+        stompClient.send(
+          `/receive/${this.chatId}`,
+          JSON.stringify(message),
+          {}
+        );
+        this.onMessageReceived();
+
+        // this.messages.push({
+        //   fromUserId: this.myId,
+        //   message: this.newMessage,
+        //   updatedAt: formattedTime,
+        // });
         this.newMessage = "";
       }
 
       const textarea = this.$refs.textareaRef;
-      textarea.style.height = "auto";
+      textarea.style.height = "43px";
 
       const inputDiv = this.$refs.inputDivRef;
-      inputDiv.style.height = "70px";
+      inputDiv.style.height = "63px";
 
       this.$nextTick(() => {
-        this.$refs.chatBox.scrollTop = this.$refs.chatBox.scrollHeight;
+        this.scrollToBottom();
       });
     },
+
+    formatTime(time) {
+      const year = time.getFullYear();
+      const month = (time.getMonth() + 1).toString().padStart(2, "0");
+      const day = time.getDate().toString().padStart(2, "0");
+      const hours = time.getHours().toString().padStart(2, "0");
+      const minutes = time.getMinutes().toString().padStart(2, "0");
+      const seconds = time.getSeconds().toString().padStart(2, "0");
+
+      const formattedTime = `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
+
+      return formattedTime;
+    },
+
+    scrollToBottom() {
+      const chatBox = this.$refs.chatBox;
+      chatBox.scrollTop = chatBox.scrollHeight;
+    },
+
     adjustTextareaHeight() {
       const textarea = this.$refs.textareaRef;
-      textarea.style.height = "auto";
+      textarea.style.height = "43px";
       textarea.style.height = `${textarea.scrollHeight}px`;
 
       const inputDiv = this.$refs.inputDivRef;
       inputDiv.style.height = `${textarea.scrollHeight + 20}px`;
+
+      this.messageHeight = `${textarea.scrollHeight}px`;
     },
     handleEnterKey(event) {
       if (event.shiftKey) {
@@ -123,9 +205,37 @@ export default {
       return message.replace(/\n/g, "<br>");
     },
     calculateMessageHeight(message) {
-      const brCount = (message.match(/\n/g) || []).length;
-      const minHeight = 36;
-      return minHeight + brCount * 16;
+      if (this.messageHeight === 0) {
+        // DB 채팅 내역 받아올 때 메시지 크기
+        const brCount = (message.match(/\n/g) || [] || "<br>").length;
+        const minHeight = 44;
+        return minHeight + (brCount + 1) * 20;
+      }
+      return this.messageHeight;
+    },
+    connect() {
+      this.isSocketConnected = true;
+
+      let socket = new SockJS("http://localhost:8080");
+      stompClient = Stomp.over(socket);
+      stompClient.connect({}, this.onConnected, this.onError);
+    },
+    onConnected() {
+      stompClient.subscribe(`/chat/${this.chatId}`, this.onMessageReceived);
+    },
+    onError() {
+      console.log("소켓 연결 실패");
+    },
+    onMessageReceived(res) {
+      setTimeout(() => {
+        this.getMessages();
+      });
+    },
+    getMessages() {
+      // 채팅 내역 가져오기
+      this.$store.dispatch("findChatMessages", this.chatId).then(() => {
+        this.messages = this.messages = this.$store.state.chatMessages;
+      });
     },
   },
 };
