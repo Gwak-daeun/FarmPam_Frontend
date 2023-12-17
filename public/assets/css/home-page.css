@@ -19,18 +19,9 @@
 
 .image-slider .image-container .image-slide img {
   width: 350px;
-  height: 250px;
+  height: 200px;
   border-radius: 10px;
 }
-
-/*.image-slider .image-container .image-slide p {*/
-/*  font-size: 25px;*/
-/*  color: #FFFFFF;*/
-/*  position: absolute;*/
-/*  bottom: 0;*/
-/*  left: 50%;*/
-/*  transform: translateX(-50%);*/
-/*}*/
 
 .month-farmer {
   margin: 20px;

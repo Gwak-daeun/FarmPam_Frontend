@@ -70,7 +70,7 @@ export default {
       if (this.tab1) {
         this.tab2 = false;
       }
-      this.sortType = 'latest'; //최신&soldoutFalse&userId auctioning
+      this.sortType = 'latest';
       this.loadData()
     },
     tab2Click() {
@@ -79,7 +79,7 @@ export default {
         this.tab1 = false;
       }
 
-      this.sortType = 'completed';  //Asc&soldoutTrue&userId completed
+      this.sortType = 'completed';
       this.loadData()
     },
 
@@ -103,8 +103,6 @@ export default {
 
           this.items.push(...res.data.filter(item => item.userId === this.myId));
 
-
-          // this.items.push(...res.data);
           this.items.forEach(item => {
             item.remainingTime = item.time;
             this.startStopwatch(item);

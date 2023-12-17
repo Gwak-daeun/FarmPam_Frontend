@@ -16,16 +16,11 @@
           </div>
         </div>
         <div class="post-content">
-          <h5> {{ item.itemTitle }} {{ item.weight }}kg</h5>
-          <img src="../../../public/assets/img/users.png" class="users-img" alt=""/>
-          <p></p>
-          <p class="current-bid-price">현재 입찰가</p>
-          <h3 class="price" v-if="currentInfo !== undefined && currentInfo[i] && currentInfo[i].bidPrice !== undefined"> {{ currentInfo[i].bidPrice }}원 </h3>
-          <!--          <p style="display: none"> {{getCurrentPrice}} </p>-->
+          <h3> {{ item.itemTitle }}</h3>
+          <h3>{{ item.weight }}kg</h3>
         </div>
       </router-link>
     </div>
-
   </div>
 </template>
 
@@ -97,5 +92,72 @@ export default {
 </script>
 
 <style scoped>
-@import "../../../public/assets/css/item-post-component.css";
+.post {
+  padding-bottom: 30px;
+}
+.post-img-box {
+  margin-top: 10px;
+  width: 100%;
+  height: 140px;
+  border-top: 1px solid #D9D9D9;
+  border-bottom: 1px solid #D9D9D9;
+}
+
+.post-img {
+  float: left;
+  width: 140px;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+.thumbnail-img {
+  margin: auto;
+  width: 110px;
+  height: 110px;
+  border-radius: 5px;
+}
+
+.remaining-time {
+  position: absolute;
+  bottom: 14px;
+}
+
+.time-bg {
+  width: 110px;
+  height: 30px;
+  background-color: rgba(0, 0, 0, 60%);
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
+
+.remaining-time p {
+  text-align: center;
+  font-size: 17px;
+  line-height: 30px;
+  color: #FFFFFF;
+}
+
+.post-content {
+  float: left;
+  margin-top: 15px;
+  width: 220px;
+  height: 110px;
+  position: relative;
+  color: black;
+}
+
+.post-content h5 {
+  width: 100%;
+  height: 50px;
+  margin-bottom: 10px;
+}
+
+.post-content .price {
+  margin-top: 24px;
+  float: right;
+  color: #E12905;
+}
+
 </style>
