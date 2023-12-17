@@ -10,7 +10,6 @@
     </div>
     <div class="select-box">
       <select class="select" v-model="sortType" @change="fetchData">
-        <option value="join">참여순</option>
         <option value="latest">최신순</option>
         <option value="time">종료임박순</option>
       </select>
@@ -77,10 +76,8 @@ export default {
     fetchData() {
       if (this.sortType === 'latest') {
         this.sortType = 'latest';
-      } else if (this.sortType === 'time') {
+      } else {
         this.sortType = 'time';
-      } else if (this.sortType === 'join') {
-        this.sortType = 'join';
       }
       this.page = 0;
       this.items = [];
