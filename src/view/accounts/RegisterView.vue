@@ -412,9 +412,14 @@ export default {
   border: #c0c0c0 1px solid;
   margin: 0 auto;
   display: flex;
-  justify-content: left;
+  /* justify-content: left; */
   overflow: auto;
   /* background: antiquewhite; */
+  flex-direction: column; /* 자식 요소들을 수직으로 배치하기 위해 column으로 설정합니다. */
+  align-items: center; /* 세로 방향에서 중앙 정렬합니다. */
+  flex-wrap: wrap;
+    flex-direction: row;
+    align-content: space-between;
 }
 
 #idInput {
@@ -499,11 +504,12 @@ button {
   background: #90ee90;
   border: transparent;
   width: 250px;
-  height: 35px;
-  font-size: 15px;
+  height: 30px;
+  font-size: 14px;
   border-radius: 5%;
-  margin-left: 25px;
-  margin-top: 30px;
+  margin-left:0px;
+  margin-top: 5px;
+  margin-bottom: 10px;
 }
 
 button:hover {

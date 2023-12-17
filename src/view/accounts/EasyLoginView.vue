@@ -11,7 +11,7 @@
           type="text"
           class="txt-input"
           id="itemname"
-          v-model="state.form.realName"
+          v-model="state.form.username"
         />
       </div>
 
@@ -150,7 +150,7 @@ export default {
   setup() {
     const state = reactive({
       form: {
-        realName: "",
+        username: "",
         phoneNumber: "",
         nickname: "",
         mailCode: "",
@@ -231,10 +231,21 @@ export default {
       );
 
       if (!isEmptyField) {
+
+        const username = localStorage.getItem("username");
+        const encodedUsername = btoa(unescape(encodeURIComponent(username)));
+
         instance
-          .post("/additionalInfo", state.form)
+          .post("/additionalInfo", state.form, {
+            headers: {
+              "content-type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+              username: encodedUsername,
+            },
+          })
           .then((res) => {
             console.log(res.data);
+            localStorage.setItem("roles", "ROLE_USER");
             location.href = "http://localhost:8081/home";
             // router.replace("home");
           })

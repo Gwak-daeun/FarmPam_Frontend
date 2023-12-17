@@ -162,6 +162,7 @@ export default {
   border: #c0c0c0 1px solid;
   margin: 0 auto;
   display: flex;
+  flex-direction: column;
   /* justify-content: center; */
   /* background: antiquewhite; */
 }
